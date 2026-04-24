@@ -35,6 +35,6 @@ The database is normalized up to 3NF to remove redundancy and ensure consistency
 ---
 
 ## 🔗 ER Diagram
-![ER Diagram](er_diagram.png)
+![ER Diagram](er_diagram.jpeg)
 
 ---
