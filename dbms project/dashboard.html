@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Exam — Live Data Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#060d18;color:#ccd6f6;font-family:'Syne',sans-serif;min-height:100vh;padding:0}
+
+/* TOP BAR */
+.topbar{
+  background:#0d1f35;border-bottom:2px solid #02c39a;
+  padding:14px 32px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+}
+.topbar-title{font-size:16px;font-weight:800;color:#02c39a;letter-spacing:1px}
+.topbar-sub{font-size:11px;color:#8892b0;margin-top:2px}
+.live-badge{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(2,195,154,.12);border:1px solid rgba(2,195,154,.3);
+  border-radius:20px;padding:6px 14px;font-size:11px;font-weight:700;color:#02c39a;
+}
+.live-dot{width:8px;height:8px;border-radius:50%;background:#02c39a;animation:pulse 1.2s infinite}
+
+/* STATS ROW */
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;padding:20px 32px 0}
+.stat-card{
+  background:#0d1f35;border:1px solid #1e3a5f;border-radius:10px;
+  padding:14px;text-align:center;transition:border-color .2s;
+}
+.stat-card:hover{border-color:#02c39a}
+.stat-n{font-size:1.8rem;font-weight:800;font-family:'JetBrains Mono';line-height:1}
+.stat-l{font-size:10px;color:#8892b0;margin-top:4px;letter-spacing:.5px}
+
+/* MAIN GRID */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:20px 32px;max-width:1400px;margin:0 auto}
+.full{grid-column:1/-1}
+
+/* SECTION */
+.section{background:#0d1f35;border:1px solid #1e3a5f;border-radius:12px;overflow:hidden}
+.sec-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 18px;border-bottom:1px solid #1e3a5f;
+  background:rgba(13,31,53,.8);
+}
+.sec-title{font-size:13px;font-weight:700;color:#e6f1ff}
+.sec-badge{font-size:10px;padding:3px 10px;border-radius:10px;font-weight:700;letter-spacing:.5px}
+.badge-blue{background:rgba(55,138,221,.15);color:#378add}
+.badge-red{background:rgba(226,75,74,.15);color:#e24b4a}
+.badge-green{background:rgba(2,195,154,.15);color:#02c39a}
+.badge-orange{background:rgba(232,138,90,.15);color:#e88a5a}
+.badge-purple{background:rgba(127,119,221,.15);color:#7f77dd}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:11.5px}
+.tbl th{padding:9px 12px;text-align:left;font-size:10px;font-weight:700;
+  color:#8892b0;letter-spacing:.5px;border-bottom:1px solid #1e3a5f;background:#060d18}
+.tbl td{padding:9px 12px;border-bottom:1px solid rgba(30,58,95,.5);
+  font-family:'JetBrains Mono';transition:background .15s}
+.tbl tr:last-child td{border:none}
+.tbl tr:hover td{background:rgba(2,195,154,.04)}
+.pk{color:#f4c430;font-weight:700}
+.flag-yes{
+  color:#e24b4a;font-weight:700;
+  display:flex;align-items:center;gap:5px;
+}
+.flag-no{color:#02c39a;font-weight:700}
+.ip-shared{
+  color:#e24b4a;font-weight:700;
+  background:rgba(226,75,74,.08);padding:2px 6px;border-radius:4px;
+}
+.ip-ok{color:#8892b0}
+.tabs-high{color:#e24b4a;font-weight:700}
+.tabs-mid{color:#e88a5a;font-weight:700}
+.tabs-ok{color:#02c39a}
+
+/* SEVERITY BADGE */
+.sev{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:28px;height:28px;border-radius:6px;font-weight:800;font-size:13px;
+  font-family:'JetBrains Mono';
+}
+.sev-5{background:rgba(226,75,74,.2);color:#e24b4a;border:1px solid rgba(226,75,74,.4)}
+.sev-4{background:rgba(232,138,90,.2);color:#e88a5a;border:1px solid rgba(232,138,90,.4)}
+.sev-3{background:rgba(244,196,48,.2);color:#f4c430;border:1px solid rgba(244,196,48,.4)}
+.sev-2{background:rgba(127,119,221,.2);color:#7f77dd;border:1px solid rgba(127,119,221,.4)}
+
+/* TAB BAR VISUAL */
+.tab-bar{display:flex;align-items:center;gap:6px;margin-top:2px}
+.tab-fill{height:6px;border-radius:3px;transition:width .3s}
+.tab-label{font-size:10px;font-family:'JetBrains Mono';min-width:20px}
+
+/* DETECTION PANEL */
+.detect-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:14px}
+.detect-card{
+  border-radius:10px;padding:16px;border-top:3px solid;
+}
+.detect-card.ip-c{border-color:#378add;background:rgba(55,138,221,.06)}
+.detect-card.tab-c{border-color:#e88a5a;background:rgba(232,138,90,.06)}
+.detect-card.ans-c{border-color:#e24b4a;background:rgba(226,75,74,.06)}
+.detect-num{font-size:2.2rem;font-weight:800;font-family:'JetBrains Mono';opacity:.2;line-height:1}
+.detect-title{font-size:13px;font-weight:700;color:#e6f1ff;margin-bottom:6px}
+.detect-query{
+  font-size:10px;font-family:'JetBrains Mono';
+  background:#020c18;border-radius:6px;padding:8px;margin:8px 0;
+  color:#82aaff;line-height:1.6;
+}
+.detect-result{font-size:11px;color:#8892b0;line-height:1.6}
+.detect-result strong{color:#02c39a}
+
+/* ANSWER COMPARISON */
+.ans-compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px}
+.ans-box{background:#060d18;border-radius:8px;padding:12px;border:1px solid #1e3a5f}
+.ans-header{font-size:11px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.ans-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:6px 8px;border-radius:6px;margin-bottom:4px;font-size:11px;
+  font-family:'JetBrains Mono';
+}
+.ans-match{background:rgba(226,75,74,.1);border:1px solid rgba(226,75,74,.2)}
+.ans-q{color:#8892b0;font-size:10px}
+.ans-opt{font-weight:700;font-size:14px}
+.ans-opt.red{color:#e24b4a}
+.ans-opt.green{color:#02c39a}
+.time-match{font-size:9px;color:#e24b4a;font-weight:700}
+
+/* TIMELINE */
+.timeline{padding:14px 18px;display:flex;flex-direction:column;gap:10px}
+.tl-item{display:flex;gap:12px;align-items:flex-start}
+.tl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.tl-dot.red{background:#e24b4a}
+.tl-dot.orange{background:#e88a5a}
+.tl-dot.blue{background:#378add}
+.tl-dot.green{background:#02c39a}
+.tl-content{flex:1}
+.tl-time{font-size:10px;color:#8892b0;font-family:'JetBrains Mono'}
+.tl-text{font-size:12px;color:#ccd6f6;margin-top:2px}
+.tl-text strong{color:#e6f1ff}
+
+/* SCORE CARD */
+.score-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:0;padding:14px}
+.score-item{text-align:center;padding:10px 6px;border-right:1px solid #1e3a5f}
+.score-item:last-child{border:none}
+.score-name{font-size:10px;color:#8892b0;margin-bottom:6px}
+.score-val{font-size:1.4rem;font-weight:800;font-family:'JetBrains Mono'}
+.score-label{font-size:9px;margin-top:3px}
+
+/* FOOTER */
+footer{text-align:center;padding:20px;color:#8892b0;font-size:11px;border-top:1px solid #1e3a5f;margin:0 32px 20px}
+
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.grid > *{animation:fadeIn .4s ease both}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div>
+    <div class="topbar-title">⚡ Smart Exam Cheating Detection — Sample Data Dashboard</div>
+    <div class="topbar-sub">IILM University · DBMS Project · Naitik Kumar (Group Leader)</div>
+  </div>
+  <div class="live-badge"><div class="live-dot"></div>LIVE DEMO DATA</div>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat-card"><div class="stat-n" style="color:#02c39a">10</div><div class="stat-l">STUDENTS</div></div>
+  <div class="stat-card"><div class="stat-n" style="color:#378add">4</div><div class="stat-l">EXAMS</div></div>
+  <div class="stat-card"><div class="stat-n" style="color:#7f77dd">10</div><div class="stat-l">ATTEMPTS</div></div>
+  <div class="stat-card"><div class="stat-n" style="color:#f4c430">7</div><div class="stat-l">FLAGS RAISED</div></div>
+  <div class="stat-card"><div class="stat-n" style="color:#e24b4a">5</div><div class="stat-l">CAUGHT (50%)</div></div>
+  <div class="stat-card"><div class="stat-n" style="color:#02c39a">5</div><div class="stat-l">CLEAN ✓</div></div>
+</div>
+
+<div class="grid">
+
+  <!-- STUDENT_EXAM TABLE — KEY TABLE -->
+  <div class="section full">
+    <div class="sec-head">
+      <div class="sec-title">⚡ STUDENT_EXAM Table — The Core Detection Table</div>
+      <span class="sec-badge badge-red">CHEATING SIGNALS HERE</span>
+    </div>
+    <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead><tr>
+        <th>attempt_id</th><th>student_name</th><th>exam_subject</th>
+        <th>ip_address</th><th>tab_switches</th><th>TAB VISUAL</th>
+        <th>cheating_detected</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="pk">1</td><td>Arjun Sharma</td><td>Database Mgmt Systems</td>
+          <td class="ip-ok">192.168.1.10</td>
+          <td class="tabs-ok">2</td>
+          <td><div class="tab-bar"><div class="tab-fill" style="width:6px;background:#02c39a"></div><span class="tab-label" style="color:#02c39a">2</span></div></td>
+          <td><span class="flag-no">✓ Clean</span></td>
+        </tr>
+        <tr style="background:rgba(226,75,74,.04)">
+          <td class="pk">2</td><td><strong style="color:#e24b4a">Priya Verma</strong></td><td>Database Mgmt Systems</td>
+          <td class="ip-shared">192.168.1.10 🚨</td>
+          <td class="tabs-high">15</td>
+          <td><div class="tab-bar"><div class="tab-fill" style="width:80px;background:#e24b4a"></div><span class="tab-label" style="color:#e24b4a">15</span></div></td>
+          <td><div class="flag-yes">🚨 TRUE</div></td>
+        </tr>
+        <tr>
+          <td class="pk">3</td><td>Rohit Mehta</td><td>Database Mgmt Systems</td>
+          <td class="ip-ok">192.168.1.11</td>
+          <td class="tabs-ok">1</td>
+          <td><div class="tab-bar"><div class="tab-fill" style="width:3px;background:#02c39a"></div><span class="tab-label" style="color:#02c39a">1</span></div></td>
+          <td><span class="flag-no">✓ Clean</span></td>
+        </tr>
+        <tr style="background:rgba(226,75,74,.04)">
+          <td class="pk">4</td><td><strong style="color:#e24b4a">Sneha Patel</strong></td><td>Database Mgmt Systems</td>
+          <td class="ip-ok">192.168.1.12</td>
+          <td class="tabs-high">18</td>
+          <td><div class="tab-bar"><div class="tab-fill" style="width:96px;background:#e24b4a"></div><span class="tab-label" style="color:#e24b4a">18</span></div></td>
+          <td><div class="flag-yes">🚨 TRUE</div></td>
+        </tr>
+        <tr>
+          <td class="pk">5</td><td>Vikram Singh</td><td>Data Structures</td>
+          <td class="ip-ok">10.0.0.5</td>
+          <td class="tabs-ok">0</td>
+          <td><div class="tab-bar"><div class="tab-fill" style="width:2px;background:#02c39a"></div><span class="tab-label" style="color:#02c39a">0</span></div></td>
+          <td><span class="flag-no">✓ Clean</span></td>
+        </tr>
+        <tr style="background:rgba(226,75,74,.04)">
+          <td class="pk">6</td><td><strong style="color:#e24b4a">Anjali Rao</strong></td><td>Data Structures</td>
+          <td class="ip-shared">10.0.0.5 🚨</td>
+          <td class="tabs-mid">3</td>
+          <td><div class="tab-bar"><div class="tab-fill" style="width:16px;background:#e88a5a"></div><span class="tab-label" style="color:#e88a5a">3</span></div></td>
+          <td><div class="flag-yes">🚨 TRUE</div></td>
+        </tr>
+        <tr>
+          <td class="pk">7</td><td>Deepak Tiwari</td><td>Computer Networks</td>
+          <td class="ip-ok">172.16.0.1</td>
+          <td class="tabs-ok">0</td>
+          <td><div class="tab-bar"><div class="tab-fill" style="width:2px;background:#02c39a"></div><span class="tab-label" style="color:#02c39a">0</span></div></td>
+          <td><span class="flag-no">✓ Clean</span></td>
+        </tr>
+        <tr style="background:rgba(226,75,74,.06)">
+          <td class="pk">8</td><td><strong style="color:#e24b4a">Kavya Nair</strong></td><td>Database Mgmt Systems</td>
+          <td class="ip-ok">192.168.1.13</td>
+          <td class="tabs-high">22 🔴</td>
+          <td><div class="tab-bar"><div class="tab-fill" style="width:120px;background:#e24b4a"></div><span class="tab-label" style="color:#e24b4a">22</span></div></td>
+          <td><div class="flag-yes">🚨 TRUE</div></td>
+        </tr>
+        <tr>
+          <td class="pk">9</td><td>Manish Gupta</td><td>Operating Systems</td>
+          <td class="ip-ok">10.0.0.9</td>
+          <td class="tabs-mid">5</td>
+          <td><div class="tab-bar"><div class="tab-fill" style="width:27px;background:#02c39a"></div><span class="tab-label" style="color:#02c39a">5</span></div></td>
+          <td><span class="flag-no">✓ Clean</span></td>
+        </tr>
+        <tr style="background:rgba(226,75,74,.04)">
+          <td class="pk">10</td><td><strong style="color:#e24b4a">Pooja Joshi</strong></td><td>Data Structures</td>
+          <td class="ip-ok">10.0.0.10</td>
+          <td class="tabs-mid">8</td>
+          <td><div class="tab-bar"><div class="tab-fill" style="width:43px;background:#e88a5a"></div><span class="tab-label" style="color:#e88a5a">8</span></div></td>
+          <td><div class="flag-yes">🚨 TRUE</div></td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- 3 CHEATING PATTERNS DETECTED -->
+  <div class="section full">
+    <div class="sec-head">
+      <div class="sec-title">🔍 Cheating Patterns Detected by SQL Queries</div>
+      <span class="sec-badge badge-red">3 PATTERNS FOUND</span>
+    </div>
+    <div class="detect-grid">
+
+      <!-- PATTERN 1: SHARED IP -->
+      <div class="detect-card ip-c">
+        <div class="detect-num">01</div>
+        <div class="detect-title" style="color:#378add">Shared IP Address</div>
+        <div class="detect-query">SELECT ip_address,<br>COUNT(DISTINCT student_id)<br>FROM STUDENT_EXAM<br>GROUP BY ip_address<br>HAVING COUNT(...) &gt; 1;</div>
+        <div class="detect-result">
+          <strong>192.168.1.10</strong> → Arjun + Priya<br>
+          <strong>10.0.0.5</strong> → Vikram + Anjali<br><br>
+          Matlab dono ek hi jagah baith ke exam de rahe the! Severity = 4
+        </div>
+      </div>
+
+      <!-- PATTERN 2: TAB SWITCHES -->
+      <div class="detect-card tab-c">
+        <div class="detect-num">02</div>
+        <div class="detect-title" style="color:#e88a5a">Excessive Tab Switching</div>
+        <div class="detect-query">SELECT s.name,<br>se.total_tab_switches<br>FROM STUDENT_EXAM se<br>JOIN STUDENT s ON ...<br>WHERE total_tab_switches &gt; 10<br>ORDER BY switches DESC;</div>
+        <div class="detect-result">
+          <strong>Kavya Nair</strong> → 22 switches (Sev 5)<br>
+          <strong>Sneha Patel</strong> → 18 switches (Sev 3)<br>
+          <strong>Priya Verma</strong> → 15 switches (Sev 3)<br><br>
+          Google pe answers dhundh rahi thi!
+        </div>
+      </div>
+
+      <!-- PATTERN 3: IDENTICAL ANSWERS -->
+      <div class="detect-card ans-c">
+        <div class="detect-num">03</div>
+        <div class="detect-title" style="color:#e24b4a">Identical Answers + Timestamps</div>
+        <div class="detect-query">-- 4-TABLE JOIN<br>SELECT s.name, q.question_text,<br>a.selected_option,<br>q.correct_option<br>FROM ANSWER a<br>JOIN STUDENT_EXAM se ...<br>JOIN STUDENT s ...<br>JOIN QUESTION q ...;</div>
+        <div class="detect-result">
+          Attempt 1 (Arjun): C,A,B,D,A<br>
+          Attempt 2 (Priya): C,A,B,D,A<br>
+          <strong>Same timestamps too!</strong> Severity = 5<br><br>
+          100% confirmed copy — database ne pakad liya!
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- IDENTICAL ANSWERS VISUAL -->
+  <div class="section">
+    <div class="sec-head">
+      <div class="sec-title">📋 Answer Comparison — Attempt 1 vs Attempt 2</div>
+      <span class="sec-badge badge-red">CONFIRMED COPY</span>
+    </div>
+    <div class="ans-compare">
+      <div class="ans-box">
+        <div class="ans-header">
+          <span style="color:#02c39a">✓</span>
+          <span style="color:#e6f1ff">Arjun Sharma — Attempt 1</span>
+        </div>
+        <div class="ans-row ans-match">
+          <span class="ans-q">Q1: SQL stand for?</span>
+          <span class="ans-opt green">C</span>
+          <span class="time-match">09:10:00</span>
+        </div>
+        <div class="ans-row ans-match">
+          <span class="ans-q">Q2: Primary key?</span>
+          <span class="ans-opt green">A</span>
+          <span class="time-match">09:20:00</span>
+        </div>
+        <div class="ans-row ans-match">
+          <span class="ans-q">Q3: Foreign key?</span>
+          <span class="ans-opt green">B</span>
+          <span class="time-match">09:30:00</span>
+        </div>
+        <div class="ans-row ans-match">
+          <span class="ans-q">Q4: Normalization?</span>
+          <span class="ans-opt green">D</span>
+          <span class="time-match">09:40:00</span>
+        </div>
+        <div class="ans-row ans-match">
+          <span class="ans-q">Q5: ACID stands for?</span>
+          <span class="ans-opt green">A</span>
+          <span class="time-match">09:50:00</span>
+        </div>
+      </div>
+      <div class="ans-box" style="border-color:rgba(226,75,74,.3)">
+        <div class="ans-header">
+          <span style="color:#e24b4a">🚨</span>
+          <span style="color:#e24b4a">Priya Verma — Attempt 2 (COPIED!)</span>
+        </div>
+        <div class="ans-row ans-match">
+          <span class="ans-q">Q1: SQL stand for?</span>
+          <span class="ans-opt red">C</span>
+          <span class="time-match">09:10:00 ← SAME!</span>
+        </div>
+        <div class="ans-row ans-match">
+          <span class="ans-q">Q2: Primary key?</span>
+          <span class="ans-opt red">A</span>
+          <span class="time-match">09:20:00 ← SAME!</span>
+        </div>
+        <div class="ans-row ans-match">
+          <span class="ans-q">Q3: Foreign key?</span>
+          <span class="ans-opt red">B</span>
+          <span class="time-match">09:30:00 ← SAME!</span>
+        </div>
+        <div class="ans-row ans-match">
+          <span class="ans-q">Q4: Normalization?</span>
+          <span class="ans-opt red">D</span>
+          <span class="time-match">09:40:00 ← SAME!</span>
+        </div>
+        <div class="ans-row ans-match">
+          <span class="ans-q">Q5: ACID stands for?</span>
+          <span class="ans-opt red">A</span>
+          <span class="time-match">09:50:00 ← SAME!</span>
+        </div>
+        <div style="text-align:center;margin-top:10px;font-size:11px;color:#e24b4a;font-weight:700;font-family:'JetBrains Mono'">
+          5/5 answers identical + timestamps match = Severity 5
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHEATING FLAG TABLE -->
+  <div class="section">
+    <div class="sec-head">
+      <div class="sec-title">🚨 CHEATING_FLAG Table — All 7 Flags</div>
+      <span class="sec-badge badge-red">AUTO-DETECTED</span>
+    </div>
+    <table class="tbl">
+      <thead><tr><th>flag_id</th><th>student</th><th>reason</th><th>severity</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="pk">1</td><td style="color:#e24b4a;font-weight:700">Priya Verma</td>
+          <td>Shared IP with another student</td>
+          <td><span class="sev sev-4">4</span></td>
+        </tr>
+        <tr>
+          <td class="pk">2</td><td style="color:#e24b4a;font-weight:700">Priya Verma</td>
+          <td>Excessive tab switching (15 times)</td>
+          <td><span class="sev sev-3">3</span></td>
+        </tr>
+        <tr>
+          <td class="pk">3</td><td style="color:#e24b4a;font-weight:700">Sneha Patel</td>
+          <td>Excessive tab switching (18 times)</td>
+          <td><span class="sev sev-3">3</span></td>
+        </tr>
+        <tr>
+          <td class="pk">4</td><td style="color:#e24b4a;font-weight:700">Anjali Rao</td>
+          <td>Shared IP address with student 5</td>
+          <td><span class="sev sev-4">4</span></td>
+        </tr>
+        <tr>
+          <td class="pk">5</td><td style="color:#e24b4a;font-weight:700">Kavya Nair</td>
+          <td>Excessive tab switching (22 times)</td>
+          <td><span class="sev sev-5">5</span></td>
+        </tr>
+        <tr>
+          <td class="pk">6</td><td style="color:#e24b4a;font-weight:700">Kavya Nair</td>
+          <td>Identical answers to attempt_id 1</td>
+          <td><span class="sev sev-5">5</span></td>
+        </tr>
+        <tr>
+          <td class="pk">7</td><td style="color:#e88a5a;font-weight:700">Pooja Joshi</td>
+          <td>Excessive tab switching (8 times)</td>
+          <td><span class="sev sev-2">2</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="padding:10px 14px;font-size:10px;color:#8892b0;border-top:1px solid #1e3a5f">
+      Severity Scale: &nbsp;<span style="color:#e24b4a">■ 5 = Confirmed cheating</span> &nbsp;
+      <span style="color:#e88a5a">■ 4 = Strong evidence</span> &nbsp;
+      <span style="color:#f4c430">■ 3 = Suspicious</span> &nbsp;
+      <span style="color:#7f77dd">■ 2 = Minor</span>
+    </div>
+  </div>
+
+  <!-- DETECTION TIMELINE -->
+  <div class="section">
+    <div class="sec-head">
+      <div class="sec-title">📅 Detection Timeline — Exam Day Events</div>
+      <span class="sec-badge badge-blue">10 March 2025 · DBMS Exam</span>
+    </div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot green"></div>
+        <div class="tl-content">
+          <div class="tl-time">09:00:00</div>
+          <div class="tl-text"><strong>Arjun Sharma</strong> starts exam · IP: 192.168.1.10 · Device: DEV001</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot red"></div>
+        <div class="tl-content">
+          <div class="tl-time">09:01:00 🚨</div>
+          <div class="tl-text"><strong>Priya Verma</strong> logs in from <strong style="color:#e24b4a">SAME IP 192.168.1.10</strong> · First flag triggered!</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot green"></div>
+        <div class="tl-content">
+          <div class="tl-time">09:00:30</div>
+          <div class="tl-text"><strong>Rohit Mehta</strong> starts · IP: 192.168.1.11 · Normal</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot orange"></div>
+        <div class="tl-content">
+          <div class="tl-time">09:02:00</div>
+          <div class="tl-text"><strong>Sneha Patel</strong> starts · Will switch tabs <strong style="color:#e24b4a">18 times</strong> during exam</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot red"></div>
+        <div class="tl-content">
+          <div class="tl-time">09:05:00 🚨🚨</div>
+          <div class="tl-text"><strong>Kavya Nair</strong> starts · Will reach <strong style="color:#e24b4a">22 tab switches</strong> + identical answers · Severity 5</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot red"></div>
+        <div class="tl-content">
+          <div class="tl-time">09:10:00 🚨</div>
+          <div class="tl-text">Arjun & Priya both submit Q1 at <strong style="color:#e24b4a">exact same second</strong> · Copy confirmed</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot green"></div>
+        <div class="tl-content">
+          <div class="tl-time">10:55:00</div>
+          <div class="tl-text">Exam ends · <strong style="color:#02c39a">SQL queries run → 7 flags auto-generated</strong> in CHEATING_FLAG table</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINAL RESULT SCOREBOARD -->
+  <div class="section full">
+    <div class="sec-head">
+      <div class="sec-title">📊 Final Result — Who Was Caught, Who Was Clean</div>
+      <span class="sec-badge badge-green">QUERY 18 OUTPUT — NOT EXISTS</span>
+    </div>
+    <table class="tbl">
+      <thead><tr><th>student_id</th><th>name</th><th>dept</th><th>tab_switches</th><th>shared_ip</th><th>identical_answers</th><th>verdict</th></tr></thead>
+      <tbody>
+        <tr><td class="pk">1</td><td>Arjun Sharma</td><td>CSE</td><td class="tabs-ok">2</td><td class="flag-no">✓ Unique</td><td class="flag-no">✓ Original</td><td><span style="color:#02c39a;font-weight:700;font-family:'JetBrains Mono'">✅ CLEAN</span></td></tr>
+        <tr style="background:rgba(226,75,74,.04)"><td class="pk">2</td><td style="color:#e24b4a;font-weight:700">Priya Verma</td><td>CSE</td><td class="tabs-high">15 🚨</td><td class="flag-yes">🚨 Shared</td><td class="flag-yes">🚨 Copied</td><td><span style="color:#e24b4a;font-weight:700;font-family:'JetBrains Mono'">🚨 FLAGGED</span></td></tr>
+        <tr><td class="pk">3</td><td>Rohit Mehta</td><td>CSE</td><td class="tabs-ok">1</td><td class="flag-no">✓ Unique</td><td class="flag-no">✓ Original</td><td><span style="color:#02c39a;font-weight:700;font-family:'JetBrains Mono'">✅ CLEAN</span></td></tr>
+        <tr style="background:rgba(226,75,74,.04)"><td class="pk">4</td><td style="color:#e24b4a;font-weight:700">Sneha Patel</td><td>CSE</td><td class="tabs-high">18 🚨</td><td class="flag-no">✓ Unique</td><td class="flag-no">—</td><td><span style="color:#e24b4a;font-weight:700;font-family:'JetBrains Mono'">🚨 FLAGGED</span></td></tr>
+        <tr><td class="pk">5</td><td>Vikram Singh</td><td>ECE</td><td class="tabs-ok">0</td><td class="flag-no">✓ Unique</td><td class="flag-no">—</td><td><span style="color:#02c39a;font-weight:700;font-family:'JetBrains Mono'">✅ CLEAN</span></td></tr>
+        <tr style="background:rgba(226,75,74,.04)"><td class="pk">6</td><td style="color:#e24b4a;font-weight:700">Anjali Rao</td><td>ECE</td><td class="tabs-ok">3</td><td class="flag-yes">🚨 Shared</td><td class="flag-no">—</td><td><span style="color:#e24b4a;font-weight:700;font-family:'JetBrains Mono'">🚨 FLAGGED</span></td></tr>
+        <tr><td class="pk">7</td><td>Deepak Tiwari</td><td>ME</td><td class="tabs-ok">0</td><td class="flag-no">✓ Unique</td><td class="flag-no">—</td><td><span style="color:#02c39a;font-weight:700;font-family:'JetBrains Mono'">✅ CLEAN</span></td></tr>
+        <tr style="background:rgba(226,75,74,.06)"><td class="pk">8</td><td style="color:#e24b4a;font-weight:700">Kavya Nair</td><td>CSE</td><td class="tabs-high">22 🔴</td><td class="flag-no">✓ Unique</td><td class="flag-yes">🚨 Copied</td><td><span style="color:#e24b4a;font-weight:700;font-family:'JetBrains Mono'">🚨 FLAGGED</span></td></tr>
+        <tr><td class="pk">9</td><td>Manish Gupta</td><td>CSE</td><td class="tabs-ok">5</td><td class="flag-no">✓ Unique</td><td class="flag-no">—</td><td><span style="color:#02c39a;font-weight:700;font-family:'JetBrains Mono'">✅ CLEAN</span></td></tr>
+        <tr style="background:rgba(226,75,74,.04)"><td class="pk">10</td><td style="color:#e88a5a;font-weight:700">Pooja Joshi</td><td>ECE</td><td class="tabs-mid">8</td><td class="flag-no">✓ Unique</td><td class="flag-no">—</td><td><span style="color:#e88a5a;font-weight:700;font-family:'JetBrains Mono'">⚠️ MINOR FLAG</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<footer>
+  Smart Exam Cheating Detection System · IILM University · Group Leader: Naitik Kumar (2410030859) · DBMS Project 2025–26
+</footer>
+
+</body>
+</html>

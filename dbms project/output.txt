@@ -1,0 +1,447 @@
+MariaDB [smart_exam]> -- Query 1
+MariaDB [smart_exam]> SELECT name, roll_no, email FROM STUDENT WHERE department = 'CSE';
++--------------+---------+--------------------+
+| name         | roll_no | email              |
++--------------+---------+--------------------+
+| Arjun Sharma | CS2101  | arjun@college.edu  |
+| Priya Verma  | CS2102  | priya@college.edu  |
+| Rohit Mehta  | CS2103  | rohit@college.edu  |
+| Sneha Patel  | CS2104  | sneha@college.edu  |
+| Kavya Nair   | CS2105  | kavya@college.edu  |
+| Manish Gupta | CS2106  | manish@college.edu |
++--------------+---------+--------------------+
+6 rows in set (0.001 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 3 (cheating detection)
+MariaDB [smart_exam]> SELECT se.attempt_id, s.name, s.roll_no, se.total_tab_switches
+    -> FROM STUDENT_EXAM se
+    -> JOIN STUDENT s ON se.student_id = s.student_id
+    -> WHERE se.total_tab_switches > 10
+    -> ORDER BY se.total_tab_switches DESC;
++------------+-------------+---------+--------------------+
+| attempt_id | name        | roll_no | total_tab_switches |
++------------+-------------+---------+--------------------+
+|          8 | Kavya Nair  | CS2105  |                 22 |
+|          4 | Sneha Patel | CS2104  |                 18 |
+|          2 | Priya Verma | CS2102  |                 15 |
++------------+-------------+---------+--------------------+
+3 rows in set (0.001 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 16 (shared IP - best query!)
+MariaDB [smart_exam]> SELECT ip_address, COUNT(DISTINCT student_id) AS student_count
+    -> FROM STUDENT_EXAM
+    -> GROUP BY ip_address
+    -> HAVING COUNT(DISTINCT student_id) > 1;
++--------------+---------------+
+| ip_address   | student_count |
++--------------+---------------+
+| 10.0.0.5     |             2 |
+| 192.168.1.10 |             2 |
++--------------+---------------+
+2 rows in set (0.001 sec)
+
+MariaDB [smart_exam]> notee
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- =============================================
+MariaDB [smart_exam]> -- SMART EXAM CHEATING DETECTION SYSTEM
+MariaDB [smart_exam]> -- All Queries Output
+MariaDB [smart_exam]> -- =============================================
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 1: CSE Students
+MariaDB [smart_exam]> SELECT name, roll_no, email FROM STUDENT WHERE department = 'CSE';
++--------------+---------+--------------------+
+| name         | roll_no | email              |
++--------------+---------+--------------------+
+| Arjun Sharma | CS2101  | arjun@college.edu  |
+| Priya Verma  | CS2102  | priya@college.edu  |
+| Rohit Mehta  | CS2103  | rohit@college.edu  |
+| Sneha Patel  | CS2104  | sneha@college.edu  |
+| Kavya Nair   | CS2105  | kavya@college.edu  |
+| Manish Gupta | CS2106  | manish@college.edu |
++--------------+---------+--------------------+
+6 rows in set (0.001 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 2: Exams longer than 90 mins
+MariaDB [smart_exam]> SELECT exam_id, subject, exam_date, duration FROM EXAM WHERE duration > 90;
++---------+-----------------------------+------------+----------+
+| exam_id | subject                     | exam_date  | duration |
++---------+-----------------------------+------------+----------+
+|       1 | Database Management Systems | 2025-03-10 |      120 |
+|       4 | Operating Systems           | 2025-03-16 |      120 |
++---------+-----------------------------+------------+----------+
+2 rows in set (0.001 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 3: Tab switches > 10
+MariaDB [smart_exam]> SELECT se.attempt_id, s.name, s.roll_no, se.total_tab_switches
+    -> FROM STUDENT_EXAM se
+    -> JOIN STUDENT s ON se.student_id = s.student_id
+    -> WHERE se.total_tab_switches > 10
+    -> ORDER BY se.total_tab_switches DESC;
++------------+-------------+---------+--------------------+
+| attempt_id | name        | roll_no | total_tab_switches |
++------------+-------------+---------+--------------------+
+|          8 | Kavya Nair  | CS2105  |                 22 |
+|          4 | Sneha Patel | CS2104  |                 18 |
+|          2 | Priya Verma | CS2102  |                 15 |
++------------+-------------+---------+--------------------+
+3 rows in set (0.001 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 4: Cheating flagged attempts
+MariaDB [smart_exam]> SELECT attempt_id, student_id, exam_id, ip_address, cheating_detected
+    -> FROM STUDENT_EXAM WHERE cheating_detected = TRUE;
++------------+------------+---------+--------------+-------------------+
+| attempt_id | student_id | exam_id | ip_address   | cheating_detected |
++------------+------------+---------+--------------+-------------------+
+|          2 |          2 |       1 | 192.168.1.10 |                 1 |
+|          4 |          4 |       1 | 192.168.1.12 |                 1 |
+|          6 |          6 |       2 | 10.0.0.5     |                 1 |
+|          8 |          8 |       1 | 192.168.1.13 |                 1 |
+|         10 |         10 |       2 | 10.0.0.10    |                 1 |
++------------+------------+---------+--------------+-------------------+
+5 rows in set (0.000 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 5: Exams between dates
+MariaDB [smart_exam]> SELECT exam_id, subject, exam_date, total_marks
+    -> FROM EXAM WHERE exam_date BETWEEN '2025-03-11' AND '2025-03-15';
++---------+-------------------+------------+-------------+
+| exam_id | subject           | exam_date  | total_marks |
++---------+-------------------+------------+-------------+
+|       2 | Data Structures   | 2025-03-12 |          75 |
+|       3 | Computer Networks | 2025-03-14 |          50 |
++---------+-------------------+------------+-------------+
+2 rows in set (0.000 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 6: Student + Exam + Attempt details (3-table JOIN)
+MariaDB [smart_exam]> SELECT s.name, s.roll_no, e.subject, se.start_time, se.end_time, se.ip_address
+    -> FROM STUDENT_EXAM se
+    -> JOIN STUDENT s ON se.student_id = s.student_id
+    -> JOIN EXAM e ON se.exam_id = e.exam_id
+    -> ORDER BY s.name;
++---------------+---------+-----------------------------+---------------------+---------------------+--------------+
+| name          | roll_no | subject                     | start_time          | end_time            | ip_address   |
++---------------+---------+-----------------------------+---------------------+---------------------+--------------+
+| Anjali Rao    | EC2102  | Data Structures             | 2025-03-12 10:00:00 | 2025-03-12 11:25:00 | 10.0.0.5     |
+| Arjun Sharma  | CS2101  | Database Management Systems | 2025-03-10 09:00:00 | 2025-03-10 10:55:00 | 192.168.1.10 |
+| Deepak Tiwari | ME2101  | Computer Networks           | 2025-03-14 14:00:00 | 2025-03-14 14:55:00 | 172.16.0.1   |
+| Kavya Nair    | CS2105  | Database Management Systems | 2025-03-10 09:05:00 | 2025-03-10 10:50:00 | 192.168.1.13 |
+| Manish Gupta  | CS2106  | Operating Systems           | 2025-03-16 09:00:00 | 2025-03-16 11:00:00 | 10.0.0.9     |
+| Pooja Joshi   | EC2103  | Data Structures             | 2025-03-12 10:03:00 | 2025-03-12 11:28:00 | 10.0.0.10    |
+| Priya Verma   | CS2102  | Database Management Systems | 2025-03-10 09:01:00 | 2025-03-10 10:50:00 | 192.168.1.10 |
+| Rohit Mehta   | CS2103  | Database Management Systems | 2025-03-10 09:00:30 | 2025-03-10 10:50:30 | 192.168.1.11 |
+| Sneha Patel   | CS2104  | Database Management Systems | 2025-03-10 09:02:00 | 2025-03-10 10:50:00 | 192.168.1.12 |
+| Vikram Singh  | EC2101  | Data Structures             | 2025-03-12 10:00:00 | 2025-03-12 11:25:00 | 10.0.0.5     |
++---------------+---------+-----------------------------+---------------------+---------------------+--------------+
+10 rows in set (0.000 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 7: Cheating flags with student and exam info (4-table JOIN)
+MariaDB [smart_exam]> SELECT s.name, e.subject, cf.reason, cf.severity_level, cf.detected_at
+    -> FROM CHEATING_FLAG cf
+    -> JOIN STUDENT_EXAM se ON cf.attempt_id = se.attempt_id
+    -> JOIN STUDENT s ON se.student_id = s.student_id
+    -> JOIN EXAM e ON se.exam_id = e.exam_id
+    -> ORDER BY cf.severity_level DESC;
++-------------+-----------------------------+----------------------------------------+----------------+---------------------+
+| name        | subject                     | reason                                 | severity_level | detected_at         |
++-------------+-----------------------------+----------------------------------------+----------------+---------------------+
+| Kavya Nair  | Database Management Systems | Excessive tab switching (22 times)     |              5 | 2026-03-30 12:40:07 |
+| Kavya Nair  | Database Management Systems | Identical answers to attempt_id 1      |              5 | 2026-03-30 12:40:07 |
+| Priya Verma | Database Management Systems | Shared IP address with another student |              4 | 2026-03-30 12:40:07 |
+| Anjali Rao  | Data Structures             | Shared IP address with student 5       |              4 | 2026-03-30 12:40:07 |
+| Priya Verma | Database Management Systems | Excessive tab switching (15 times)     |              3 | 2026-03-30 12:40:07 |
+| Sneha Patel | Database Management Systems | Excessive tab switching (18 times)     |              3 | 2026-03-30 12:40:07 |
+| Pooja Joshi | Data Structures             | Excessive tab switching (8 times)      |              2 | 2026-03-30 12:40:07 |
++-------------+-----------------------------+----------------------------------------+----------------+---------------------+
+7 rows in set (0.001 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 8: Selected vs correct answers
+MariaDB [smart_exam]> SELECT s.name, q.question_text, a.selected_option, q.correct_option,
+    -> IF(a.selected_option = q.correct_option, 'Correct', 'Wrong') AS result
+    -> FROM ANSWER a
+    -> JOIN STUDENT_EXAM se ON a.attempt_id = se.attempt_id
+    -> JOIN STUDENT s ON se.student_id = s.student_id
+    -> JOIN QUESTION q ON a.question_id = q.question_id
+    -> WHERE se.exam_id = 1 AND se.student_id = 1;
++--------------+--------------------------------------+-----------------+----------------+---------+
+| name         | question_text                        | selected_option | correct_option | result  |
++--------------+--------------------------------------+-----------------+----------------+---------+
+| Arjun Sharma | What does SQL stand for?             | C               | C              | Correct |
+| Arjun Sharma | Which key uniquely identifies a row? | A               | A              | Correct |
+| Arjun Sharma | What is a foreign key?               | B               | B              | Correct |
+| Arjun Sharma | Normalization reduces?               | D               | D              | Correct |
+| Arjun Sharma | ACID stands for?                     | A               | A              | Correct |
++--------------+--------------------------------------+-----------------+----------------+---------+
+5 rows in set (0.001 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 9: How many exams each student attempted
+MariaDB [smart_exam]> SELECT s.name, s.roll_no, COUNT(se.attempt_id) AS total_attempts
+    -> FROM STUDENT s
+    -> LEFT JOIN STUDENT_EXAM se ON s.student_id = se.student_id
+    -> GROUP BY s.student_id, s.name, s.roll_no
+    -> ORDER BY total_attempts DESC;
++---------------+---------+----------------+
+| name          | roll_no | total_attempts |
++---------------+---------+----------------+
+| Pooja Joshi   | EC2103  |              1 |
+| Manish Gupta  | CS2106  |              1 |
+| Kavya Nair    | CS2105  |              1 |
+| Deepak Tiwari | ME2101  |              1 |
+| Anjali Rao    | EC2102  |              1 |
+| Vikram Singh  | EC2101  |              1 |
+| Sneha Patel   | CS2104  |              1 |
+| Rohit Mehta   | CS2103  |              1 |
+| Priya Verma   | CS2102  |              1 |
+| Arjun Sharma  | CS2101  |              1 |
++---------------+---------+----------------+
+10 rows in set (0.000 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 10: Average and max tab switches per exam
+MariaDB [smart_exam]> SELECT e.subject,
+    -> ROUND(AVG(se.total_tab_switches), 2) AS avg_tab_switches,
+    -> MAX(se.total_tab_switches) AS max_switches
+    -> FROM STUDENT_EXAM se
+    -> JOIN EXAM e ON se.exam_id = e.exam_id
+    -> GROUP BY se.exam_id, e.subject;
++-----------------------------+------------------+--------------+
+| subject                     | avg_tab_switches | max_switches |
++-----------------------------+------------------+--------------+
+| Database Management Systems |            11.60 |           22 |
+| Data Structures             |             3.67 |            8 |
+| Computer Networks           |             0.00 |            0 |
+| Operating Systems           |             5.00 |            5 |
++-----------------------------+------------------+--------------+
+4 rows in set (0.000 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 11: Count flags at each severity level
+MariaDB [smart_exam]> SELECT severity_level, COUNT(*) AS flag_count,
+    -> GROUP_CONCAT(reason SEPARATOR ' | ') AS reasons
+    -> FROM CHEATING_FLAG
+    -> GROUP BY severity_level
+    -> ORDER BY severity_level DESC;
++----------------+------------+---------------------------------------------------------------------------+
+| severity_level | flag_count | reasons                                                                   |
++----------------+------------+---------------------------------------------------------------------------+
+|              5 |          2 | Excessive tab switching (22 times) | Identical answers to attempt_id 1    |
+|              4 |          2 | Shared IP address with another student | Shared IP address with student 5 |
+|              3 |          2 | Excessive tab switching (15 times) | Excessive tab switching (18 times)   |
+|              2 |          1 | Excessive tab switching (8 times)                                         |
++----------------+------------+---------------------------------------------------------------------------+
+4 rows in set (0.000 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 12: Total cheating flags per student
+MariaDB [smart_exam]> SELECT s.name, s.roll_no, COUNT(cf.flag_id) AS total_flags
+    -> FROM STUDENT s
+    -> JOIN STUDENT_EXAM se ON s.student_id = se.student_id
+    -> JOIN CHEATING_FLAG cf ON se.attempt_id = cf.attempt_id
+    -> GROUP BY s.student_id, s.name, s.roll_no
+    -> ORDER BY total_flags DESC;
++-------------+---------+-------------+
+| name        | roll_no | total_flags |
++-------------+---------+-------------+
+| Kavya Nair  | CS2105  |           2 |
+| Priya Verma | CS2102  |           2 |
+| Pooja Joshi | EC2103  |           1 |
+| Anjali Rao  | EC2102  |           1 |
+| Sneha Patel | CS2104  |           1 |
++-------------+---------+-------------+
+5 rows in set (0.001 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 13: Exams with more than 2 flagged students
+MariaDB [smart_exam]> SELECT e.subject, e.exam_date,
+    -> COUNT(DISTINCT cf.attempt_id) AS flagged_students
+    -> FROM CHEATING_FLAG cf
+    -> JOIN STUDENT_EXAM se ON cf.attempt_id = se.attempt_id
+    -> JOIN EXAM e ON se.exam_id = e.exam_id
+    -> GROUP BY e.exam_id, e.subject, e.exam_date
+    -> HAVING COUNT(DISTINCT cf.attempt_id) > 2;
++-----------------------------+------------+------------------+
+| subject                     | exam_date  | flagged_students |
++-----------------------------+------------+------------------+
+| Database Management Systems | 2025-03-10 |                3 |
++-----------------------------+------------+------------------+
+1 row in set (0.000 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 14: Students with more than 1 cheating flag
+MariaDB [smart_exam]> SELECT name, roll_no FROM STUDENT
+    -> WHERE student_id IN (
+    ->     SELECT se.student_id FROM STUDENT_EXAM se
+    ->     JOIN CHEATING_FLAG cf ON se.attempt_id = cf.attempt_id
+    ->     GROUP BY se.student_id
+    ->     HAVING COUNT(cf.flag_id) > 1
+    -> );
++-------------+---------+
+| name        | roll_no |
++-------------+---------+
+| Priya Verma | CS2102  |
+| Kavya Nair  | CS2105  |
++-------------+---------+
+2 rows in set (0.001 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 16: Shared IP addresses (KEY CHEATING DETECTION)
+MariaDB [smart_exam]> SELECT ip_address, COUNT(DISTINCT student_id) AS student_count
+    -> FROM STUDENT_EXAM
+    -> GROUP BY ip_address
+    -> HAVING COUNT(DISTINCT student_id) > 1;
++--------------+---------------+
+| ip_address   | student_count |
++--------------+---------------+
+| 10.0.0.5     |             2 |
+| 192.168.1.10 |             2 |
++--------------+---------------+
+2 rows in set (0.000 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 17: Tab switches above system average
+MariaDB [smart_exam]> SELECT se.attempt_id, s.name, se.total_tab_switches
+    -> FROM STUDENT_EXAM se
+    -> JOIN STUDENT s ON se.student_id = s.student_id
+    -> WHERE se.total_tab_switches > (SELECT AVG(total_tab_switches) FROM STUDENT_EXAM)
+    -> ORDER BY se.total_tab_switches DESC;
++------------+-------------+--------------------+
+| attempt_id | name        | total_tab_switches |
++------------+-------------+--------------------+
+|          8 | Kavya Nair  |                 22 |
+|          4 | Sneha Patel |                 18 |
+|          2 | Priya Verma |                 15 |
+|         10 | Pooja Joshi |                  8 |
++------------+-------------+--------------------+
+4 rows in set (0.000 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 18: Students who NEVER got flagged
+MariaDB [smart_exam]> SELECT s.name, s.roll_no, s.department FROM STUDENT s
+    -> WHERE EXISTS (SELECT 1 FROM STUDENT_EXAM se WHERE se.student_id = s.student_id)
+    -> AND NOT EXISTS (
+    ->     SELECT 1 FROM STUDENT_EXAM se
+    ->     JOIN CHEATING_FLAG cf ON se.attempt_id = cf.attempt_id
+    ->     WHERE se.student_id = s.student_id
+    -> );
++---------------+---------+------------+
+| name          | roll_no | department |
++---------------+---------+------------+
+| Arjun Sharma  | CS2101  | CSE        |
+| Rohit Mehta   | CS2103  | CSE        |
+| Vikram Singh  | EC2101  | ECE        |
+| Deepak Tiwari | ME2101  | ME         |
+| Manish Gupta  | CS2106  | CSE        |
++---------------+---------+------------+
+5 rows in set (0.001 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 19: INSERT new student
+MariaDB [smart_exam]> INSERT INTO STUDENT (name, roll_no, email, department)
+    -> VALUES ('Ravi Shankar', 'CS2107', 'ravi@college.edu', 'CSE');
+Query OK, 1 row affected (0.003 sec)
+
+MariaDB [smart_exam]> SELECT * FROM STUDENT WHERE roll_no = 'CS2107';
++------------+--------------+---------+------------------+------------+
+| student_id | name         | roll_no | email            | department |
++------------+--------------+---------+------------------+------------+
+|         11 | Ravi Shankar | CS2107  | ravi@college.edu | CSE        |
++------------+--------------+---------+------------------+------------+
+1 row in set (0.000 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 20: INSERT new exam attempt
+MariaDB [smart_exam]> INSERT INTO STUDENT_EXAM (student_id, exam_id, start_time, ip_address, device_id, total_tab_switches)
+    -> VALUES (11, 3, NOW(), '10.0.0.20', 'DEV011', 0);
+Query OK, 1 row affected (0.001 sec)
+
+MariaDB [smart_exam]> SELECT * FROM STUDENT_EXAM WHERE attempt_id = 11;
++------------+------------+---------+---------------------+----------+------------+-----------+--------------------+-------------------+
+| attempt_id | student_id | exam_id | start_time          | end_time | ip_address | device_id | total_tab_switches | cheating_detected |
++------------+------------+---------+---------------------+----------+------------+-----------+--------------------+-------------------+
+|         11 |         11 |       3 | 2026-03-30 12:44:16 | NULL     | 10.0.0.20  | DEV011    |                  0 |                 0 |
++------------+------------+---------+---------------------+----------+------------+-----------+--------------------+-------------------+
+1 row in set (0.000 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 21: INSERT cheating flag
+MariaDB [smart_exam]> INSERT INTO CHEATING_FLAG (attempt_id, reason, severity_level)
+    -> VALUES (11, 'Unusual IP address detected', 3);
+Query OK, 1 row affected (0.001 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 22: UPDATE tab switches
+MariaDB [smart_exam]> UPDATE STUDENT_EXAM SET total_tab_switches = 25, cheating_detected = TRUE WHERE attempt_id = 11;
+Query OK, 1 row affected (0.001 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+MariaDB [smart_exam]> SELECT * FROM STUDENT_EXAM WHERE attempt_id = 11;
++------------+------------+---------+---------------------+----------+------------+-----------+--------------------+-------------------+
+| attempt_id | student_id | exam_id | start_time          | end_time | ip_address | device_id | total_tab_switches | cheating_detected |
++------------+------------+---------+---------------------+----------+------------+-----------+--------------------+-------------------+
+|         11 |         11 |       3 | 2026-03-30 12:44:16 | NULL     | 10.0.0.20  | DEV011    |                 25 |                 1 |
++------------+------------+---------+---------------------+----------+------------+-----------+--------------------+-------------------+
+1 row in set (0.000 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 23: UPDATE severity level
+MariaDB [smart_exam]> UPDATE CHEATING_FLAG SET severity_level = 5 WHERE flag_id = 7 AND severity_level < 5;
+Query OK, 1 row affected (0.001 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+MariaDB [smart_exam]> SELECT * FROM CHEATING_FLAG WHERE flag_id = 7;
++---------+------------+-----------------------------------+----------------+---------------------+
+| flag_id | attempt_id | reason                            | severity_level | detected_at         |
++---------+------------+-----------------------------------+----------------+---------------------+
+|       7 |         10 | Excessive tab switching (8 times) |              5 | 2026-03-30 12:40:07 |
++---------+------------+-----------------------------------+----------------+---------------------+
+1 row in set (0.000 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 24: DELETE false positive flag
+MariaDB [smart_exam]> DELETE FROM CHEATING_FLAG WHERE flag_id = 7;
+Query OK, 1 row affected (0.001 sec)
+
+MariaDB [smart_exam]> SELECT * FROM CHEATING_FLAG WHERE flag_id = 7;
+Empty set (0.001 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 25: DELETE all flags for attempt 11
+MariaDB [smart_exam]> DELETE FROM CHEATING_FLAG WHERE attempt_id = 11;
+Query OK, 1 row affected (0.001 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> -- Query 26: CREATE VIEW
+MariaDB [smart_exam]> CREATE OR REPLACE VIEW vw_suspicious_attempts AS
+    -> SELECT s.name, s.roll_no, e.subject,
+    -> se.attempt_id, se.total_tab_switches,
+    -> se.ip_address, se.cheating_detected
+    -> FROM STUDENT_EXAM se
+    -> JOIN STUDENT s ON se.student_id = s.student_id
+    -> JOIN EXAM e ON se.exam_id = e.exam_id
+    -> WHERE se.total_tab_switches > 10 OR se.cheating_detected = TRUE;
+Query OK, 0 rows affected (0.002 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> SELECT * FROM vw_suspicious_attempts;
++--------------+---------+-----------------------------+------------+--------------------+--------------+-------------------+
+| name         | roll_no | subject                     | attempt_id | total_tab_switches | ip_address   | cheating_detected |
++--------------+---------+-----------------------------+------------+--------------------+--------------+-------------------+
+| Priya Verma  | CS2102  | Database Management Systems |          2 |                 15 | 192.168.1.10 |                 1 |
+| Sneha Patel  | CS2104  | Database Management Systems |          4 |                 18 | 192.168.1.12 |                 1 |
+| Kavya Nair   | CS2105  | Database Management Systems |          8 |                 22 | 192.168.1.13 |                 1 |
+| Anjali Rao   | EC2102  | Data Structures             |          6 |                  3 | 10.0.0.5     |                 1 |
+| Pooja Joshi  | EC2103  | Data Structures             |         10 |                  8 | 10.0.0.10    |                 1 |
+| Ravi Shankar | CS2107  | Computer Networks           |         11 |                 25 | 10.0.0.20    |                 1 |
++--------------+---------+-----------------------------+------------+--------------------+--------------+-------------------+
+6 rows in set (0.014 sec)
+
+MariaDB [smart_exam]> 
+MariaDB [smart_exam]> notee
